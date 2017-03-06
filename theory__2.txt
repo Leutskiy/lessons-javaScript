@@ -1,0 +1,103 @@
+﻿ВЫПОЛНЕНИЕ JS-СКРИПТОВ
+
+Любой JavaScript-сценарий выполняется в две фазы:
+
+* Инициализация (подготовка к запуску скрипта). На этом этапе происходит обход скрипта с целью выявить сначала функции из класса Function Declaration; а затем найти все объявленные переменные. Стоит отметить, что если будут обнаружены две переменные с одним именем, объявленные через ключевое слово var, то глобальная область видимости будет содержать только одно объявление.
+
+Во время инициализации скрипт сканируется на предмет объявления функций вида Function Declaration, а затем – на предмет объявления переменных var. Каждое такое объявление добавляется в window.
+
+Функции, объявленные как Function Declaration, создаются сразу работающими, а переменные – равными undefined.
+
+* Выполнение. Присваивание (=) значений переменных происходит, когда поток выполнения доходит до соответствующей строчки кода, до этого они undefined.
+
+/* Пример1: */
+
+// на момент инициализации, до выполнения кода:
+// window = { someFunc: function someFunc(args) { /*...*/ }, a: undefined, b: undefined, newSomeFunc: undefined }
+
+var a = 1;
+// window = { someFunc: function someFunc(args) { /*...*/ }, a: 1, b: undefined, newSomeFunc: undefined }
+
+function someFunc(args) { /*...*/ }
+// window = { someFunc: function someFunc(args) { /*...*/ }, a: undefined, b: undefined, newSomeFunc: undefined } - без изменение, так как someFunc обработана в фазе инциализации
+
+var b = 2;
+// window = { someFunc: function someFunc(args) { /*...*/ }, a: undefined, b: 2, newSomeFunc: undefined }
+
+var b = 3;
+// window = { someFunc: function someFunc(args) { /*...*/ }, a: undefined, b: 3, newSomeFunc: undefined }
+
+var newSomeFunc = function(args) { /*...*/ };
+// window = { someFunc: function someFunc(args) { /*...*/ }, a: undefined, b: 2, newSomeFunc: function(args) { /*...*/ } }
+
+/* Пример2: */
+
+// вывод на консоль относится к фазе выполнения, поэтому:
+console.log('a' in window);			// true, так как переменная a объявлена в глобальной области видимости, то есть уже есть window.a
+console.log(a);						// undefined, так как присвоение значения переменной a осуществляется позже
+console.log(typeof someFunc);		// function someFunc(args) { /*...*/ }, так из класса Function Declaration, то может быть уже использована
+console.log(typeof newSomeFunc);	// undefined, так как присвоение значения переменной a осуществляется позже
+
+var a = 1;
+function someFunc(args) { /*...*/ }
+var newSomeFunc = function(args) { /*...*/ };
+
+Замечания:
+
+1. Объявление переменной без ключевого слова var
+
+/* Пример1: */
+
+console.log(a);	// undefined, так как присвоение значения переменной a осуществляется позже
+var a = 5;		// присвоение a значения 5
+
+/* Пример2: */
+console.log(a);	// ошибка, так как переменная a необъявлена в глобальной области видимости (текст ошибки: Uncaught ReferenceError: a is not defined)
+
+if (a === undefined)
+{
+	a = 5;		// создание переменной window.a и присвоение a значения 5 ---> window = { a: 5 }
+}		
+
+/* Пример3: */
+console.log(a);	// undefined, так как присвоение значения переменной a осуществляется позже
+
+var a;
+if (a === undefined)
+{
+	a = 5;	// присвоение a значения 5
+}
+// можно тут var a;
+
+эквивалентно
+
+console.log(a);	// undefined, так как присвоение значения переменной a осуществляется позже
+
+if (a === undefined)
+{
+	var a = 5;	// присвоение a значения 5
+}
+
+!ВАЖНО: всегда объявляем переменную через var
+
+2. Конструкции for, while, if не влияют на область видимости переменных
+
+/* Пример1: */
+
+var i;
+{
+	i = 1;
+	j = 2;
+}
+var j;
+
+или, что эквивалентно
+
+/* Пример2: */
+
+{
+	var i = 1;
+	var j = 2;
+}
+
+3. Ошибки при работе в IE8: https://learn.javascript.ru/global-object
